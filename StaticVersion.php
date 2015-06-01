@@ -72,8 +72,4 @@ class staticVersion {
   }
 
 }
-
-$myStatic = new staticVersion("test/ver.json",dirname(__FILE__)."test/",0);
-$myStatic->autoVersion("static/b.js");
-
 ?>
