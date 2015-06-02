@@ -6,11 +6,9 @@
  */
 class staticVersion {
 
-  public $verData,$verHashFile,$isRemote,$path;
-  private $timeout = 10;
+  public $verData,$verHashFile,$path;
 
-  public function __construct($verHashFile,$path,$isRemote){
-    $this->isRemote = $isRemote;
+  function __construct($verHashFile,$path){
     $this->path = $path;
     $this->verHashFile = $verHashFile;
     $content = $this->getContent();
@@ -18,7 +16,11 @@ class staticVersion {
     $this->verData = is_null($json) ? new stdClass() : $json;
   }
 
-  public function autoVersion($filename){
+  function autoVersion($filename){
+    echo $this->getUrl($filename);
+  }
+
+  function getUrl($filename){
     $version = $this->getVersion($filename);
     $output;
     if(is_null($version)){
@@ -26,13 +28,23 @@ class staticVersion {
     }else{
       $output = $filename."?v=".$version;
     }
-    if($this->isRemote){
-      $output += $path.$output;
-    }
-    echo $output;
+    return $output;
   }
 
-  private function remote_file_exists($url){
+  function getVersion($filename){
+    if($this->verData->$filename){
+      return $this->verData->$filename; 
+    }
+    return NULL;
+  }
+
+}
+
+class remoteStaticVersion extends staticVersion {
+
+  private $timeout = 10;
+
+  function remote_file_exists($url){
     $curl = curl_init($url);
     $result = curl_exec($curl);
     $found = false;
@@ -46,30 +58,32 @@ class staticVersion {
     return $found;
   }
 
-  private function getContent(){
-    if($this -> isRemote){
-      $curl = curl_init();
-      curl_setopt($curl, CURLOPT_URL, $this->verHashFile);
-      curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-      curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
-      curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
-      $result = curl_exec($curl);
-      $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE); 
-      curl_close($curl);
-      if($statusCode == 200) return $result;
-      else return "";
-    }else{
-      if(file_exists($this->verHashFile)) return file_get_contents($this->verHashFile);
-      else return "";
-    }
+  function getContent(){
+    $curl = curl_init();
+    curl_setopt($curl, CURLOPT_URL, $this->verHashFile);
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
+    curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
+    $result = curl_exec($curl);
+    $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE); 
+    curl_close($curl);
+    if($statusCode == 200) return $result;
+    else return "";
   }
 
-  private function getVersion($filename){
-    if($this->verData->$filename){
-      return $this->verData->$filename; 
-    }
-    return NULL;
+  function autoVersion($filename){
+    $output = $this->getUrl($filename);
+    $output += $this->path.$output;
+    echo $output;
   }
 
 }
+
+class localStaticVersion extends staticVersion {
+  function getContent(){
+    if(file_exists($this->verHashFile)) return file_get_contents($this->verHashFile);
+    else return "";
+  }
+}
+
 ?>

@@ -1,5 +1,5 @@
 <?php
 include_once("../StaticVersion.php");
-$myStatic = new staticVersion("ver.json",dirname(__FILE__),0);
+$myStatic = new localStaticVersion("ver.json",dirname(__FILE__));
 $myStatic->autoVersion("static/b.js");
 ?>
