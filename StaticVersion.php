@@ -32,7 +32,7 @@ class staticVersion {
   }
 
   function getVersion($filename){
-    if($this->verData->$filename){
+    if(isset($this->verData) && isset($this->verData->$filename)){
       return $this->verData->$filename; 
     }
     return NULL;
@@ -44,23 +44,9 @@ class remoteStaticVersion extends staticVersion {
 
   private $timeout = 10;
 
-  function remote_file_exists($url){
-    $curl = curl_init($url);
-    $result = curl_exec($curl);
-    $found = false;
-    if ($result !== false) {
-      $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE); 
-      if ($statusCode == 200) {
-        $found = true;
-      }
-    }
-    curl_close($curl);
-    return $found;
-  }
-
   function getContent(){
     $curl = curl_init();
-    curl_setopt($curl, CURLOPT_URL, $this->verHashFile);
+    curl_setopt($curl, CURLOPT_URL, $this->path.$this->verHashFile);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'GET');
     curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
@@ -73,7 +59,7 @@ class remoteStaticVersion extends staticVersion {
 
   function autoVersion($filename){
     $output = $this->getUrl($filename);
-    $output += $this->path.$output;
+    $output = $this->path.$output;
     echo $output;
   }
 
